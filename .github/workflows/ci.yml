@@ -1,0 +1,105 @@
+name: CI
+
+# A workflow minden push-ra és minden pull request-re lefut.
+# Így a main ágon és a PR-eken is van zöld/piros jelzés.
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+jobs:
+
+  # ----------------------------------------------------------------------------
+  # BLOCK 1-2 BASELINE: install, lint, test
+  # Ez a job a kurzus elején aktív. Block 2-ben a branch protection beállítással
+  # kötelezővé tesszük, hogy a "build-and-test" zöldre menjen a merge előtt.
+  # ----------------------------------------------------------------------------
+  build-and-test:
+    name: Build és teszt
+    runs-on: ubuntu-latest
+    steps:
+      - name: Repo letöltése
+        uses: actions/checkout@v4
+
+      - name: Python beállítása
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Függőségek telepítése
+        run: pip install -r requirements.txt
+
+      - name: Lint (ruff)
+        run: ruff check .
+
+      - name: Tesztek futtatása (pytest)
+        run: pytest
+
+  # ============================================================================
+  # BLOCK 3 UNLOCK: Secret scanning
+  # ----------------------------------------------------------------------------
+  # A 3. blokkban (secret-ek) távolítjuk el a "# " jeleket a sorok elejéről.
+  # A gitleaks átfut a repo történetén és leállítja a buildet, ha planted
+  # vagy véletlenül commit-olt secret-et talál.
+  # ============================================================================
+  # secret-scan:
+  #   name: Secret scan (gitleaks)
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Repo letöltése (teljes történettel)
+  #       uses: actions/checkout@v4
+  #       with:
+  #         fetch-depth: 0
+  #
+  #     - name: Gitleaks futtatása
+  #       uses: gitleaks/gitleaks-action@v2
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ============================================================================
+  # BLOCK 4 UNLOCK: Supply chain (SCA) scanning
+  # ----------------------------------------------------------------------------
+  # A 4. blokkban (supply chain) aktiváljuk. A pip-audit megnézi a
+  # requirements.txt-t és leállítja a buildet, ha ismert CVE van benne.
+  # A PyPA tartja karban, ezért konvencionálisan ezt választjuk.
+  # ============================================================================
+  # sca-audit:
+  #   name: SCA audit (pip-audit)
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Repo letöltése
+  #       uses: actions/checkout@v4
+  #
+  #     - name: Python beállítása
+  #       uses: actions/setup-python@v5
+  #       with:
+  #         python-version: "3.11"
+  #
+  #     - name: pip-audit telepítése
+  #       run: pip install pip-audit
+  #
+  #     - name: Audit futtatása
+  #       run: pip-audit -r requirements.txt
+
+  # ============================================================================
+  # BLOCK 5 UNLOCK: AI assisted code review
+  # ----------------------------------------------------------------------------
+  # Az 5. blokkban (AI a folyamatban) aktiváljuk. A Claude Code Action minden
+  # PR-en futtat egy AI code review-t. Kell hozzá egy CLAUDE_CODE_OAUTH_TOKEN
+  # repository secret. A demóban csak a kommentet vesszük le, éles használathoz
+  # a token beállítása szükséges.
+  # ============================================================================
+  # ai-review:
+  #   name: AI code review (Claude)
+  #   runs-on: ubuntu-latest
+  #   if: github.event_name == 'pull_request'
+  #   steps:
+  #     - name: Repo letöltése
+  #       uses: actions/checkout@v4
+  #
+  #     - name: Claude Code Action
+  #       uses: anthropics/claude-code-action@v1
+  #       with:
+  #         claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
