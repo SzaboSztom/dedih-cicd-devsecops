@@ -73,7 +73,7 @@ jobs:
   #         sudo mv gitleaks /usr/local/bin/
   #
   #     - name: Gitleaks futtatása
-  #       run: gitleaks detect --source . --verbose --redact
+  #       run: gitleaks detect --source . --verbose --redact --log-opts="HEAD"
 
   # ============================================================================
   # BLOCK 4 UNLOCK: Supply chain (SCA) scanning
@@ -94,8 +94,8 @@ jobs:
   #       with:
   #         python-version: "3.11"
   #
-  #     - name: pip-audit telepítése
-  #       run: pip install pip-audit
+  #     - name: Függőségek telepítése
+  #       run: pip install -r requirements.txt
   #
   #     - name: Audit futtatása
   #       run: pip-audit -r requirements.txt

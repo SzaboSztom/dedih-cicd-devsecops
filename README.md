@@ -50,6 +50,21 @@ uvicorn app.main:app --reload
 
 Swagger UI: <http://127.0.0.1:8000/docs>
 
+## Függőségek frissítése
+
+Ha a `pip-audit` ismert CVE-t talál egy függőségben, a leggyorsabb javítás:
+
+```bash
+pip-audit -r requirements.txt --fix
+pytest
+ruff check .
+ruff format --check .
+```
+
+A `--fix` automatikusan frissíti az érintett csomagokat egy javított verzióra,
+és a `requirements.txt`-t is átírja. A tesztek és a lint újrafuttatása
+ellenőrzi, hogy a frissítés nem tört el semmit.
+
 ## Ágak
 
 | Ág | Tartalom |
